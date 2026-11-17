@@ -7,7 +7,11 @@ const PORT=process.env.PORT||3000,DB=process.env.DATA_FILE||path.join(__dirname,
 fs.mkdirSync(path.dirname(DB),{recursive:true});
 function readDB(){try{return JSON.parse(fs.readFileSync(DB,'utf8'))}catch{return {}}}
 let db=readDB();function writeDB(){const tmp=DB+'.tmp';fs.writeFileSync(tmp,JSON.stringify(db,null,2));fs.renameSync(tmp,DB)}
-app.use(express.json({limit:'32kb'}));app.use(express.static(path.join(__dirname,'public')));
+app.use(express.json({limit:'32kb'}));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 const sessions=new Map();function session(req,res,next){let sid=req.headers.cookie?.match(/(?:^|; )edu_sid=([^;]+)/)?.[1];if(!sid||!sessions.has(sid)){sid=crypto.randomBytes(24).toString('hex');sessions.set(sid,null);res.setHeader('Set-Cookie',`edu_sid=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000`)}req.sid=sid;req.user=sessions.get(sid);next()}
 app.use(session);
 const defaults=()=>({coins:0,unlocked:['lucky'],skin:'lucky',level:1,solved:0,savedReturn:{x:0,y:1,z:2,yaw:0,pitch:-.08,valid:false},player:{x:0,y:1,z:2},yaw:0,pitch:-.08});
