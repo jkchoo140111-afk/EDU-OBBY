@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EDU OBBY 3D ONLINE</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(#07142d 0%,#10285a 48%,#0b1730 100%);font-family:Arial,sans-serif}
+canvas{display:block;width:100%;height:100%;background:radial-gradient(circle at 50% 25%,rgba(71,150,255,.28),transparent 32%),linear-gradient(#07142d,#132d60 55%,#071225)}
+#ui{position:fixed;inset:0;pointer-events:none;color:#fff}
+#top{position:absolute;top:16px;left:16px;background:rgba(7,12,28,.76);padding:12px 16px;border:1px solid rgba(130,190,255,.28);border-radius:14px;font-weight:700;backdrop-filter:blur(8px);box-shadow:0 10px 30px #0005}
+#help{position:absolute;bottom:16px;left:16px;background:rgba(7,12,28,.72);padding:10px 14px;border:1px solid rgba(130,190,255,.18);border-radius:10px;font-size:14px}
+#cross{position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);border:2px solid white;border-radius:50%;opacity:.9;box-shadow:0 0 12px #8bd}
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(580px,92vw);background:rgba(7,13,30,.96);border:1px solid #55719c;border-radius:20px;padding:28px;box-shadow:0 24px 100px #000b;pointer-events:auto;text-align:center}
+button{border:0;border-radius:11px;padding:13px 18px;margin:6px;font-size:16px;font-weight:700;cursor:pointer;background:#4e8cff;color:white;box-shadow:0 6px 18px #0004}button:hover{filter:brightness(1.14)}
+.choice{display:block;width:100%;margin:9px 0;background:#202e4a}.choice:hover{background:#31517e}
+#start h1{margin-top:0;font-size:36px;letter-spacing:2px}#start p{color:#cbd8ee;line-height:1.6}.small{font-size:13px;color:#aebbd0}
+#question{display:none}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#20365d;color:#8fc8ff;font-size:12px;font-weight:800;margin-bottom:6px}
+#msg{position:absolute;left:50%;top:18%;transform:translateX(-50%);background:rgba(10,20,42,.9);border:1px solid #5075a5;padding:12px 18px;border-radius:12px;display:none;box-shadow:0 10px 35px #0007}
+
+#shiftLockHint{display:none;position:fixed;top:72px;left:50%;transform:translateX(-50%);padding:7px 12px;border:1px solid rgba(120,220,255,.5);border-radius:999px;background:rgba(5,15,30,.72);color:#dff8ff;font-size:12px;z-index:20;pointer-events:none;backdrop-filter:blur(8px)}
+body.shift-lock #shiftLockHint{display:block}
+body.shift-lock canvas{cursor:crosshair!important}
+
+#shopBtn{background:#7b5cff}#shop{display:none}.skinGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}.skinCard{background:#121e38;border:1px solid #314a72;border-radius:14px;padding:13px;text-align:left}.skinName{font-size:18px;font-weight:800}.skinDesc{font-size:12px;color:#aebbd0;margin:5px 0 9px}.skinCard button{width:100%;margin:0;padding:10px}.adminTag{display:inline-block;background:#ffb52e;color:#251900;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900;margin-left:5px}
+
+#auth{display:flex;align-items:center;justify-content:center;z-index:30}
+.authBox{width:min(430px,calc(100vw - 36px));background:rgba(8,15,31,.94);border:1px solid #35517d;border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.authBox h1{margin:0 0 8px;font-size:30px}.authBox p{color:#aebbd0}.authBox input{width:100%;box-sizing:border-box;margin:6px 0;padding:13px;border-radius:12px;border:1px solid #334b70;background:#0c162b;color:white;font-size:15px;outline:none}.authBox input:focus{border-color:#6bb8ff}.authTabs{display:flex;gap:8px;margin:15px 0}.authTabs button{flex:1;margin:0;background:#172744}.authTabs button.active{background:#356fd8}.authError{min-height:20px;color:#ff8e8e;font-size:13px;margin:7px 0}.accountBar{position:absolute;right:14px;top:14px;background:rgba(8,15,31,.82);padding:6px 8px;border-radius:999px;font-size:12px;color:#dceaff;display:flex;gap:8px;align-items:center}.accountBar button{margin:0;padding:6px 9px;border-radius:10px;font-size:12px;background:#263957}
+
+/* ONLINE QUALITY UPDATE */
+#top{backdrop-filter:blur(14px);background:linear-gradient(135deg,rgba(8,18,42,.88),rgba(20,40,78,.76));border-color:rgba(111,190,255,.5)}
+.panel{backdrop-filter:blur(18px);background:linear-gradient(145deg,rgba(8,18,40,.97),rgba(15,30,59,.96));border-color:rgba(105,175,255,.65)}
+button{background:linear-gradient(135deg,#438cff,#665bff);transition:transform .15s,filter .15s,box-shadow .15s}button:hover{transform:translateY(-2px);box-shadow:0 9px 24px #236bff55}
+#onlineStatus{position:absolute;top:72px;left:16px;padding:7px 12px;border-radius:99px;background:#07182dcc;border:1px solid #4d9bba;color:#b9f4ff;font-size:12px;font-weight:700}
+#players{position:absolute;right:16px;top:72px;padding:9px 13px;border-radius:12px;background:#07182dcc;border:1px solid #45638b;font-size:12px}
+#toastOnline{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);padding:9px 14px;border-radius:12px;background:#09182be8;border:1px solid #5aa5dc;display:none}
+@media(max-width:650px){#top{font-size:12px;top:8px;left:8px;padding:9px}#help{font-size:11px;max-width:calc(100vw - 20px);left:10px;bottom:10px}.accountBar{top:52px;right:8px}}
+</style></head>
+<body>
+<div id="shiftLockHint">SHIFT LOCK · ON</div>
+<canvas id="gl"></canvas>
+<div id="ui"><div id="accountBar" class="accountBar" style="display:none"><span id="accountName"></span><button id="logoutBtn" type="button">로그아웃</button></div>
+ <div id="top">🪙 <span id="stars">0</span>　체크포인트 <span id="cp">0</span>/<span id="cpTotal">6</span>　🏆 난이도 <span id="level">1</span></div>
+ <div id="onlineStatus">● 서버 연결 중...</div><div id="players">접속자 1명</div><div id="toastOnline"></div><div id="cross"></div><div id="help">WASD 이동　SPACE 점프　우클릭 + 마우스 회전　R 마지막 체크포인트　ESC 로비</div><div id="msg"></div>
+ <div id="auth" class="panel">
+  <div class="authBox">
+   <h1>EDU OBBY 3D</h1><p>닉네임과 비밀번호로 내 게임 데이터를 저장하세요.</p>
+   <div class="authTabs"><button id="loginTab" class="active">로그인</button><button id="signupTab">회원가입</button></div>
+   <input id="authNick" maxlength="16" autocomplete="username" placeholder="닉네임">
+   <input id="authPass" type="password" maxlength="64" autocomplete="current-password" placeholder="비밀번호">
+   <input id="authPass2" type="password" maxlength="64" autocomplete="new-password" placeholder="비밀번호 확인" style="display:none">
+   <div id="authError" class="authError"></div><button id="authSubmit">로그인</button>
+  </div>
+ </div>
+ <div id="start" class="panel"><h1>EDU OBBY 3D</h1><p>더 길어진 코스를 달리고 장애물을 피하면서 체크포인트 문제를 풀어보세요.</p><p class="small">숲길 → 공중 다리 → 네온 구역 → 최종 타워<br>한 바퀴를 클리어할수록 맵과 문제가 더 어려워집니다.</p><div>🪙 <b id="lobbyStars">0</b>　👤 <b id="currentSkinName">Lucky</b></div><button id="startBtn">게임 시작</button><button id="shopBtn">👕 캐릭터</button></div>
+ <div id="shop" class="panel"><h2 style="margin-top:0">👕 CHARACTER SHOP</h2><p>모은 🪙로 캐릭터를 구매하고 장착하세요.</p><div>🪙 <b id="shopStars">0</b><span id="adminBadge"></span></div><div id="adminControls" style="margin-top:10px"></div><div id="skinGrid" class="skinGrid"></div><button id="shopClose">닫기</button></div>
+ <div id="question" class="panel"><div id="qbadge" class="badge">CHECKPOINT · 문제 난이도 1</div><h2 id="qtext"></h2><div id="choices"></div><div id="feedback" class="small"></div></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+"use strict";
+const canvas=document.getElementById("gl"),gl=canvas.getContext("webgl",{antialias:true,alpha:true});
+if(!gl){document.body.innerHTML='<h2 style="color:white;padding:30px">이 브라우저에서는 WebGL을 사용할 수 없습니다.</h2>';throw new Error("WebGL unavailable");}
+const vs=`attribute vec3 aPos;uniform mat4 uMVP;uniform vec3 uColor;varying vec3 vColor;void main(){gl_Position=uMVP*vec4(aPos,1.0);vColor=uColor;}`;
+const fs=`precision mediump float;varying vec3 vColor;void main(){gl_FragColor=vec4(vColor,1.0);}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(prog);gl.useProgram(prog);
+const aPos=gl.getAttribLocation(prog,"aPos"),uMVP=gl.getUniformLocation(prog,"uMVP"),uColor=gl.getUniformLocation(prog,"uColor");
+const verts=new Float32Array([-1,-1,-1,1,-1,-1,1,1,-1,-1,1,-1,-1,-1,1,1,-1,1,1,1,1,-1,1,1]);
+const inds=new Uint16Array([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,3,2,6,3,6,7,1,5,6,1,6,2,0,3,7,0,7,4]);
+const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,verts,gl.STATIC_DRAW);
+const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,inds,gl.STATIC_DRAW);gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);gl.enable(gl.DEPTH_TEST);
+// 금색 보너스 코인 전용 원기둥 메시: 기존 큐브 렌더러는 그대로 유지
+const coinSeg=32, coinVerts=new Float32Array((coinSeg*2)*3), coinInds=new Uint16Array((coinSeg*2+coinSeg*2)*3);
+for(let i=0;i<coinSeg;i++){const a=i*Math.PI*2/coinSeg,c=Math.cos(a),q=Math.sin(a);
+ coinVerts[i*3]=c;coinVerts[i*3+1]=q;coinVerts[i*3+2]=.5;
+ coinVerts[(coinSeg+i)*3]=c;coinVerts[(coinSeg+i)*3+1]=q;coinVerts[(coinSeg+i)*3+2]=-.5;}
+let ci=0;for(let i=0;i<coinSeg;i++){const n=(i+1)%coinSeg,a=i,b=n,c=coinSeg+i,d=coinSeg+n;
+ coinInds[ci++]=a;coinInds[ci++]=n;coinInds[ci++]=b; coinInds[ci++]=a;coinInds[ci++]=b;coinInds[ci++]=c;
+ coinInds[ci++]=coinSeg;coinInds[ci++]=coinSeg;coinInds[ci++]=coinSeg; }
+// 위 루프의 캡 인덱스는 별도로 정확하게 구성
+const coinIdx=[];for(let i=1;i<coinSeg-1;i++){coinIdx.push(0,i+1,i);coinIdx.push(coinSeg,coinSeg+i,coinSeg+i+1);}
+for(let i=0;i<coinSeg;i++){const n=(i+1)%coinSeg,a=i,b=n,c=coinSeg+i,d=coinSeg+n;coinIdx.push(a,c,b,b,c,d);}
+const coinIB=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,coinIB);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(coinIdx),gl.STATIC_DRAW);
+const coinVB=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,coinVB);gl.bufferData(gl.ARRAY_BUFFER,coinVerts,gl.STATIC_DRAW);
+const coinIndexCount=coinIdx.length;
+function drawCoin(o){
+ gl.bindBuffer(gl.ARRAY_BUFFER,coinVB);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,coinIB);
+ const m=modelEuler(o);gl.uniformMatrix4fv(uMVP,false,matMul(pv,m));gl.uniform3fv(uColor,new Float32Array(o.color||[1,.68,.03]));gl.drawElements(gl.TRIANGLES,coinIndexCount,gl.UNSIGNED_SHORT,0);
+ // 다음 일반 오브젝트가 깨지지 않도록 기존 큐브 버퍼 복구
+ gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+}
+
+function matMul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o;}
+function perspective(fov,aspect,n,f){const t=1/Math.tan(fov/2),o=new Float32Array(16);o[0]=t/aspect;o[5]=t;o[10]=(f+n)/(n-f);o[11]=-1;o[14]=(2*f*n)/(n-f);return o;}
+function viewMatrix(){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const fx=sy*cp,fy=sp,fz=-cy*cp,rx=cy,rz=sy,ux=-sy*sp,uy=cp,uz=cy*sp;const lockDist=shiftLock?6.2:camDist;const px=player.x-lockDist*fx,py=player.y+1.7-lockDist*fy,pz=player.z-lockDist*fz;return new Float32Array([rx,ux,-fx,0,0,uy,-fy,0,rz,uz,-fz,0,-(rx*px+rz*pz),-(ux*px+uy*py+uz*pz),fx*px+fy*py+fz*pz,1]);}
+function modelMatrix(o){const sx=o.sx,sy=o.sy,sz=o.sz,c=Math.cos(o.rot||0),s=Math.sin(o.rot||0);return new Float32Array([c*sx,0,-s*sx,0,0,sy,0,0,s*sz,0,c*sz,0,o.x,o.y,o.z,1]);}
+function draw(o){const m=modelMatrix(o);gl.uniformMatrix4fv(uMVP,false,matMul(pv,m));gl.uniform3fv(uColor,new Float32Array(o.color||[1,1,1]));gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0);}
+function modelEuler(o){const sx=o.sx,sy=o.sy,sz=o.sz,rx=o.rx||0,ry=o.ry||0,rz=o.rz||0;const cx=Math.cos(rx),sxr=Math.sin(rx),cy=Math.cos(ry),syr=Math.sin(ry),cz=Math.cos(rz),szr=Math.sin(rz);const r00=cy*cz,r01=cy*szr,r02=-syr;const r10=sxr*syr*cz-cx*szr,r11=sxr*syr*szr+cx*cz,r12=sxr*cy;const r20=cx*syr*cz+sxr*szr,r21=cx*syr*szr-sxr*cz,r22=cx*cy;return new Float32Array([r00*sx,r10*sx,r20*sx,0,r01*sy,r11*sy,r21*sy,0,r02*sz,r12*sz,r22*sz,0,o.x,o.y,o.z,1]);}
+function drawE(o){const m=modelEuler(o);gl.uniformMatrix4fv(uMVP,false,matMul(pv,m));gl.uniform3fv(uColor,new Float32Array(o.color||[1,1,1]));gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,0);}
+function drawPlayer(t){
+ const skin=SKINS.find(x=>x.id===equippedSkin)||SKINS[0];
+ const body=skin.body,dark=skin.dark,hair=skin.hair,skinColor=skin.skin,shoe=skin.shoe;
+ const moving=Math.hypot(player.vx,player.vz)>0.15&&!paused;
+ const walk=moving?Math.sin(t*11)*0.48:0;
+ const bob=moving?Math.abs(Math.sin(t*11))*.035:0;
+ const ry=shiftLock?yaw:Math.atan2(player.vx,-player.vz);
+ const x=player.x,z=player.z,y=player.y+bob;
+ // torso
+ drawE({x,y:y+1.05,z,sx:.48,sy:.62,sz:.32,ry,color:body});
+ // jacket panel
+ drawE({x,y:y+1.08,z:z-.335,sx:.30,sy:.40,sz:.035,ry,color:dark});
+ // neck + head
+ drawE({x,y:y+1.72,z,sx:.16,sy:.16,sz:.16,ry,color:skinColor});
+ drawE({x,y:y+2.02,z,sx:.39,sy:.40,sz:.37,ry,color:skinColor});
+ // hair cap + back hair
+ drawE({x,y:y+2.34,z,sx:.40,sy:.15,sz:.38,ry,color:hair});
+ drawE({x,y:y+2.10,z:z+.35,sx:.30,sy:.30,sz:.10,ry,color:hair});
+ // arms
+ const ar=.82*walk;
+ drawE({x:x-.58,y:y+1.10,z,rx:ar,ry, sx:.15,sy:.52,sz:.15,color:body});
+ drawE({x:x+.58,y:y+1.10,z,rx:-ar,ry, sx:.15,sy:.52,sz:.15,color:body});
+ drawE({x:x-.59,y:y+.55,z,rx:ar,ry,sx:.16,sy:.15,sz:.16,color:skinColor});
+ drawE({x:x+.59,y:y+.55,z,rx:-ar,ry,sx:.16,sy:.15,sz:.16,color:skinColor});
+ // legs + shoes
+ drawE({x:x-.22,y:y+.18,z,rx:-walk,ry,sx:.18,sy:.48,sz:.20,color:body});
+ drawE({x:x+.22,y:y+.18,z,rx:walk,ry,sx:.18,sy:.48,sz:.20,color:body});
+ drawE({x:x-.22,y:y-.28,z:z-.08,rx:-walk,ry,sx:.22,sy:.13,sz:.34,color:shoe});
+ drawE({x:x+.22,y:y-.28,z:z-.08,rx:walk,ry,sx:.22,sy:.13,sz:.34,color:shoe});
+ // simple face visor/details facing camera-relative front
+ drawE({x:x-.14*Math.cos(ry),y:y+2.05,z:z-.14*Math.sin(ry),sx:.055,sy:.055,sz:.035,ry,color:[.03,.05,.08]});
+ drawE({x:x+.14*Math.cos(ry),y:y+2.05,z:z+.14*Math.sin(ry),sx:.055,sy:.055,sz:.035,ry,color:[.03,.05,.08]});
+}
+function resize(){const d=devicePixelRatio||1,w=innerWidth*d,h=innerHeight*d;if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}}addEventListener("resize",resize);resize();
+
+// 긴 4구간 코스
+const platforms=[
+{x:0,y:-.35,z:0,sx:7,sy:.35,sz:7,color:[.18,.30,.52]},
+{x:0,y:-.35,z:-10,sx:5,sy:.35,sz:4,color:[.18,.43,.32]},
+{x:4,y:-.35,z:-18,sx:3.4,sy:.35,sz:4,color:[.22,.50,.34]},
+{x:-3,y:-.35,z:-27,sx:3.5,sy:.35,sz:4,color:[.24,.55,.36]},
+{x:1,y:-.35,z:-36,sx:4,sy:.35,sz:4,color:[.20,.47,.33]},
+{x:-2,y:-.35,z:-45,sx:3,sy:.35,sz:4,color:[.25,.39,.58]},
+{x:2,y:-.35,z:-53,sx:3,sy:.35,sz:3.5,color:[.26,.42,.62]},
+{x:-1,y:-.35,z:-61,sx:2.7,sy:.35,sz:3.5,color:[.30,.46,.68]},
+{x:3,y:-.35,z:-69,sx:3,sy:.35,sz:4,color:[.25,.39,.62]},
+{x:0,y:-.35,z:-78,sx:4.5,sy:.35,sz:4,color:[.22,.28,.58]},
+{x:-4,y:-.35,z:-87,sx:3,sy:.35,sz:4,color:[.38,.23,.60]},
+{x:2,y:-.35,z:-96,sx:3.2,sy:.35,sz:4,color:[.42,.25,.65]},
+{x:-1,y:-.35,z:-105,sx:3.5,sy:.35,sz:4,color:[.47,.22,.60]},
+{x:3,y:-.35,z:-114,sx:3,sy:.35,sz:4,color:[.50,.24,.54]},
+{x:0,y:-.35,z:-123,sx:4,sy:.35,sz:4,color:[.48,.30,.48]},
+{x:-2,y:-.35,z:-132,sx:3.5,sy:.35,sz:4,color:[.55,.34,.42]},
+{x:2,y:-.35,z:-141,sx:4.5,sy:.35,sz:4,color:[.60,.38,.32]},
+{x:0,y:-.35,z:-151,sx:7,sy:.35,sz:7,color:[.55,.40,.28]}
+];
+const cps=[{x:0,y:.55,z:-10},{x:1,y:.55,z:-36},{x:-1,y:.55,z:-61},{x:0,y:.55,z:-78},{x:-1,y:.55,z:-105},{x:0,y:.55,z:-123}];
+const obstacles=[
+{x:0,y:.72,z:-6,sx:4.0,sy:.32,sz:.35,color:[1,.30,.30],move:"x",amp:2.4,speed:1.5},
+{x:4,y:.75,z:-18,sx:2.2,sy:.28,sz:.3,color:[1,.55,.18],move:"rot",rot:.4,speed:2.0},
+{x:-3,y:.72,z:-27,sx:3.0,sy:.3,sz:.3,color:[1,.30,.48],move:"x",amp:1.8,speed:2.1},
+{x:1,y:.72,z:-31,sx:3.6,sy:.3,sz:.32,color:[1,.32,.20],move:"x",amp:2.3,speed:1.7},
+{x:-2,y:.72,z:-45,sx:2.0,sy:.28,sz:.3,color:[.35,.75,1],move:"rot",rot:.1,speed:2.5},
+{x:2,y:.72,z:-53,sx:2.5,sy:.3,sz:.3,color:[.4,.8,1],move:"x",amp:1.7,speed:2.0},
+{x:-1,y:.72,z:-66,sx:2.2,sy:.28,sz:.3,color:[.7,.4,1],move:"rot",rot:.2,speed:2.8},
+{x:3,y:.72,z:-69,sx:2.8,sy:.3,sz:.3,color:[.3,.75,1],move:"x",amp:2.1,speed:2.2},
+{x:0,y:.72,z:-72,sx:3.6,sy:.3,sz:.32,color:[.95,.25,1],move:"x",amp:2.5,speed:2.0},
+{x:-4,y:.72,z:-87,sx:2.2,sy:.3,sz:.3,color:[1,.25,.65],move:"rot",rot:.1,speed:3.0},
+{x:2,y:.72,z:-96,sx:2.8,sy:.3,sz:.3,color:[.85,.25,1],move:"x",amp:1.8,speed:2.5},
+{x:-1,y:.72,z:-110,sx:3.0,sy:.3,sz:.3,color:[1,.35,.65],move:"rot",rot:.2,speed:3.1},
+{x:3,y:.72,z:-114,sx:2.4,sy:.3,sz:.3,color:[1,.45,.35],move:"x",amp:2,speed:2.5},
+{x:0,y:.72,z:-129,sx:3.2,sy:.3,sz:.3,color:[1,.5,.25],move:"rot",rot:.1,speed:3.2},
+{x:-2,y:.72,z:-132,sx:2.8,sy:.3,sz:.3,color:[1,.42,.25],move:"x",amp:2.1,speed:2.7},
+{x:2,y:.72,z:-141,sx:3.4,sy:.32,sz:.34,color:[1,.62,.25],move:"rot",rot:.1,speed:3.4}
+];
+const questionPool=[
+ {d:1,q:"태양의 높이가 높아질수록 그림자의 길이는 어떻게 될까요?",a:["짧아진다","길어진다","항상 같다","없어진다"],c:0},
+ {d:1,q:"2.4 ÷ 0.6은 얼마일까요?",a:["0.4","4","40","6"],c:1},
+ {d:1,q:"우리나라에서 평야가 넓게 발달하기 쉬운 곳은?",a:["강 주변의 평평한 지역","높은 산의 정상","급경사의 산지","깊은 바닷속"],c:0},
+ {d:1,q:"하루 동안 태양의 남중고도가 가장 높을 때 그림자는 보통?",a:["가장 짧다","가장 길다","아침과 같다","계속 길어진다"],c:0},
+
+ {d:2,q:"0.84 ÷ 0.7은 얼마일까요?",a:["0.12","1.2","12","0.7"],c:1},
+ {d:2,q:"어느 날 정오에 A지역보다 B지역의 태양 남중고도가 높았습니다. 같은 조건이라면 B지역의 그림자는?",a:["더 짧다","더 길다","항상 같다","없다"],c:0},
+ {d:2,q:"큰 강이 바다로 흘러가면서 운반한 흙과 모래가 쌓여 만들어지는 지형은?",a:["삼각주","고원","산맥","분지"],c:0},
+ {d:2,q:"3.6L의 물을 0.6L씩 병에 나누어 담으면 몇 병이 필요할까요?",a:["5병","6병","7병","8병"],c:1},
+
+ {d:3,q:"어떤 수를 0.4로 나누었더니 7.5가 되었습니다. 어떤 수일까요?",a:["2","3","30","18.75"],c:1},
+ {d:3,q:"A지역은 오전보다 정오에 그림자가 훨씬 짧아졌습니다. 가장 알맞은 까닭은?",a:["정오에 태양의 높이가 더 높아졌기 때문","정오에 태양이 사라졌기 때문","정오에 지구가 멈췄기 때문","정오에는 그림자가 항상 없어지기 때문"],c:0},
+ {d:3,q:"산지가 많은 지역에서 평야가 많은 지역보다 인구가 적게 모이는 까닭으로 가장 알맞은 것은?",a:["농경지와 생활 공간을 넓게 확보하기 어렵기 때문","비가 절대 오지 않기 때문","바다가 없기 때문","항상 눈이 내리기 때문"],c:0},
+ {d:3,q:"5.76 ÷ 0.8의 값은 얼마일까요?",a:["0.72","7.2","72","720"],c:1},
+
+ {d:4,q:"어떤 수를 0.06으로 나누었더니 8이 되었습니다. 어떤 수일까요?",a:["0.48","4.8","48","0.048"],c:0},
+ {d:4,q:"같은 시각에 A지역의 태양 남중고도가 50°, B지역이 35°였습니다. 두 지역의 물체 그림자를 비교하면?",a:["A지역의 그림자가 더 짧다","B지역의 그림자가 더 짧다","두 지역이 항상 같다","둘 다 그림자가 없다"],c:0},
+ {d:4,q:"어떤 지역에 높은 산이 많고 평지가 적습니다. 이 지역의 교통이 평야 지역보다 불편할 가능성이 큰 이유는?",a:["도로를 놓을 수 있는 평평한 공간이 적기 때문","강이 너무 많기 때문","태양이 뜨지 않기 때문","사람이 살 수 없기 때문"],c:0},
+ {d:4,q:"3.75m의 끈을 0.25m씩 똑같이 자르면 몇 조각이 될까요?",a:["10조각","12조각","15조각","20조각"],c:1},
+
+ {d:5,q:"어떤 수를 0.08로 나누었더니 6.5가 되었습니다. 어떤 수일까요?",a:["0.52","5.2","52","0.052"],c:0},
+ {d:5,q:"같은 날 같은 시각에 두 지역에서 같은 높이의 막대를 세웠습니다. A지역의 그림자가 40cm, B지역의 그림자가 65cm였습니다. 태양 남중고도가 더 높은 곳은?",a:["A지역","B지역","두 지역이 같다","알 수 없다"],c:0},
+ {d:5,q:"강 상류의 산지에서 하류의 평야로 갈수록 지형이 비교적 평평해지는 지역이 많습니다. 사람들이 하류 평야에 많이 모이는 이유로 가장 알맞은 것은?",a:["농업과 도시를 발달시키기 좋은 넓고 평평한 공간이 있기 때문","산 정상보다 기온이 항상 20℃ 높기 때문","비가 전혀 오지 않기 때문","강이 없는 곳이기 때문"],c:0},
+ {d:5,q:"4.8kg의 쌀을 0.3kg씩 봉지에 담고, 그중 5봉지를 팔았습니다. 남은 쌀은 몇 kg일까요?",a:["3.0kg","3.3kg","3.5kg","4.3kg"],c:1},
+ {d:5,q:"어떤 수의 0.2배가 3.6입니다. 그 수를 0.4로 나누면 얼마일까요?",a:["9","18","36","72"],c:1}
+];
+const ADMIN_MODE=false;
+const SKINS=[
+ {id:"lucky",name:"Lucky",price:0,desc:"기본 캐릭터",body:[.12,.48,.95],dark:[.08,.22,.48],hair:[.08,.055,.04],skin:[.94,.72,.53],shoe:[.05,.07,.12]},
+ {id:"lucy",name:"Lucy",price:30,desc:"귀여운 핑크 스타일",body:[.96,.34,.62],dark:[.60,.08,.25],hair:[.95,.55,.72],skin:[.96,.76,.62],shoe:[.18,.05,.12]},
+ {id:"blaze",name:"Blaze",price:60,desc:"불꽃처럼 뜨거운 스타일",body:[.95,.22,.06],dark:[.52,.05,.02],hair:[.18,.045,.02],skin:[.95,.68,.48],shoe:[.10,.03,.01]},
+ {id:"zippy",name:"Zippy",price:90,desc:"번개처럼 통통 튀는 스타일",body:[.18,.82,.98],dark:[.02,.30,.55],hair:[.95,.86,.08],skin:[.92,.70,.48],shoe:[.04,.16,.20]},
+ {id:"nova",name:"Nova",price:140,desc:"우주빛 갤럭시 스타일",body:[.45,.18,.85],dark:[.16,.05,.38],hair:[.08,.03,.18],skin:[.84,.62,.48],shoe:[.06,.03,.15]},
+ {id:"roy",name:"Roy",price:220,desc:"황금 왕자 스타일",body:[.95,.68,.08],dark:[.55,.30,.02],hair:[.20,.12,.03],skin:[.95,.72,.52],shoe:[.12,.08,.03]}
+];
+let currentAccount=null;
+let storedStars=0,storedUnlocked=["lucky"],storedSkin="lucky";
+let stars=0,unlocked=new Set(["lucky"]),equippedSkin="lucky";
+
+// Online account API: credentials and progress are stored by the game server.
+async function api(path, body){const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await r.json().catch(()=>({error:'서버 응답을 읽지 못했습니다.'}));if(!r.ok)throw new Error(data.error||'요청에 실패했습니다.');return data;}
+function cleanNick(n){return n.trim().replace(/[^\p{L}\p{N}_-]/gu,"").slice(0,16)}
+function accountData(){return {coins:stars,unlocked:[...unlocked],skin:equippedSkin,level,solved,savedReturn,player:{x:player.x,y:player.y,z:player.z},yaw,pitch}}
+let saveTimer=null;
+function saveAccount(){if(!currentAccount)return;clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{try{await api('/api/progress',accountData())}catch(e){onlineToast('저장 실패: '+e.message)}},250);}
+function loadAccountData(a){stars=Number(a.coins||0);unlocked=new Set(Array.isArray(a.unlocked)&&a.unlocked.length?a.unlocked:['lucky']);equippedSkin=unlocked.has(a.skin)?a.skin:'lucky';level=Math.max(1,Number(a.level||1));solved=Math.max(0,Math.min(cps.length,Number(a.solved||0)));savedReturn=a.savedReturn&&a.savedReturn.valid?{...a.savedReturn}:{x:0,y:1,z:2,yaw:0,pitch:-.08,valid:false};if(a.player)player={x:Number(a.player.x)||0,y:Number(a.player.y)||1,z:Number(a.player.z)||2,vx:0,vy:0,vz:0,onGround:false};yaw=Number(a.yaw)||0;pitch=typeof a.pitch==='number'?a.pitch:-.08}
+function setAuthError(t){document.getElementById("authError").textContent=t||""}
+let authMode="login";
+function setAuthMode(mode){authMode=mode;document.getElementById("loginTab").classList.toggle("active",mode==="login");document.getElementById("signupTab").classList.toggle("active",mode==="signup");document.getElementById("authPass2").style.display=mode==="signup"?"block":"none";document.getElementById("authSubmit").textContent=mode==="signup"?"회원가입":"로그인";setAuthError("")}
+async function submitAuth(){
+ const nick=cleanNick(document.getElementById('authNick').value),pass=document.getElementById('authPass').value,pass2=document.getElementById('authPass2').value;setAuthError('');
+ if(nick.length<2){setAuthError('닉네임은 2자 이상 입력해 주세요.');return;}if(pass.length<6){setAuthError('비밀번호는 6자 이상 입력해 주세요.');return;}if(authMode==='signup'&&pass!==pass2){setAuthError('비밀번호가 서로 달라요.');return;}
+ const b=document.getElementById('authSubmit');b.disabled=true;b.textContent='접속 중...';
+ try{const data=await api(authMode==='signup'?'/api/signup':'/api/login',{nick,password:pass});currentAccount=nick;loadAccountData(data.account);enterLobbyAfterAuth();msg(authMode==='signup'?'회원가입 완료!':'로그인 완료!');connectGameSocket();}
+ catch(e){setAuthError(e.message)}finally{b.disabled=false;b.textContent=authMode==='signup'?'회원가입':'로그인';}
+}
+function enterLobbyAfterAuth(){document.getElementById("auth").style.display="none";document.getElementById("start").style.display="block";document.getElementById("shop").style.display="none";document.getElementById("accountBar").style.display="block";document.getElementById("accountName").textContent="👤 "+currentAccount;updateShopUI();document.getElementById("stars").textContent=stars;document.getElementById("cp").textContent=solved;document.getElementById("level").textContent=level}
+async function logout(){if(started)goLobby();saveAccount();await new Promise(r=>setTimeout(r,350));if(gameSocket)gameSocket.disconnect();gameSocket=null;remotePlayers={};try{await api('/api/logout',{})}catch(e){}currentAccount=null;document.getElementById("start").style.display="none";document.getElementById("shop").style.display="none";document.getElementById("auth").style.display="flex";document.getElementById("accountBar").style.display="none";document.getElementById("authNick").value="";document.getElementById("authPass").value="";document.getElementById("authPass2").value="";setAuthMode("login");}
+
+let player={x:0,y:1,z:2,vx:0,vy:0,vz:0,onGround:false},yaw=0,pitch=-.08,camDist=8,started=false,paused=false,solved=0,level=1,currentCP=-1,keys={},mouseDown=false,lastX=0,lastY=0,lastTime=performance.now(),currentAnswers=[],currentQuestion=null,lastQuestionKey="",collected=new Set(),shiftLock=false;
+let savedReturn={x:0,y:1,z:2,yaw:0,pitch:-.08,valid:false};
+function reset(){shiftLock=false;document.body.classList.remove("shift-lock");mouseDown=false;player={x:player.x||0,y:player.y||1,z:player.z||2,vx:0,vy:0,vz:0,onGround:false};currentCP=-1;paused=false;collected.clear();document.getElementById("stars").textContent=stars;document.getElementById("cp").textContent=solved;document.getElementById("level").textContent=level;updateShopUI();hideQuestion();}
+function restartAtLastCheckpoint(){const c=solved>0?cps[solved-1]:null;player.x=c?c.x:0;player.z=c?c.z+3:2;player.y=1;player.vx=0;player.vy=0;player.vz=0;paused=false;hideQuestion();msg(c?"↩ 마지막 체크포인트로 이동!":"↩ 시작 지점으로 이동!");}
+function msg(t){const e=document.getElementById("msg");e.textContent=t;e.style.display="block";clearTimeout(msg.t);msg.t=setTimeout(()=>e.style.display="none",1300);}
+function pickQuestion(){const d=Math.min(5,Math.max(1,Math.ceil(level/1.5)));let pool=questionPool.filter(q=>q.d===d);if(!pool.length)pool=questionPool.filter(q=>q.d<=d);let c=pool.filter(q=>q.q!==lastQuestionKey);if(!c.length)c=pool;currentQuestion=c[Math.floor(Math.random()*c.length)];lastQuestionKey=currentQuestion.q;currentAnswers=currentQuestion.a.map((text,i)=>({text,correct:i===currentQuestion.c}));for(let i=currentAnswers.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[currentAnswers[i],currentAnswers[j]]=[currentAnswers[j],currentAnswers[i]];}}
+function showQuestion(i){paused=true;currentCP=i;pickQuestion();document.getElementById("qbadge").textContent="CHECKPOINT · 문제 난이도 "+currentQuestion.d;document.getElementById("qtext").textContent=currentQuestion.q;const box=document.getElementById("choices");box.innerHTML="";document.getElementById("feedback").textContent="";currentAnswers.forEach((x,n)=>{const b=document.createElement("button");b.className="choice";b.textContent=x.text;b.onclick=()=>answer(i,n);box.appendChild(b);});document.getElementById("question").style.display="block";}
+function hideQuestion(){document.getElementById("question").style.display="none";}
+function answer(i,n){if(currentAnswers[n]?.correct){solved=Math.max(solved,i+1);stars++;saveProgress();document.getElementById("stars").textContent=stars;document.getElementById("cp").textContent=solved;hideQuestion();paused=false;msg("정답! 체크포인트 통과!");}else document.getElementById("feedback").textContent="아니에요! 다시 생각해 보세요.";}
+
+function saveProgress(){saveAccount();}
+function updateShopUI(){
+ const ls=document.getElementById("lobbyStars"),ss=document.getElementById("shopStars"),cn=document.getElementById("currentSkinName");
+ if(ls)ls.textContent=stars;if(ss)ss.textContent=stars;if(cn)cn.textContent=(SKINS.find(x=>x.id===equippedSkin)||SKINS[0]).name;
+ const badge=document.getElementById("adminBadge");if(badge)badge.innerHTML=ADMIN_MODE?'<span class="adminTag">ADMIN</span>':'';
+ const ac=document.getElementById("adminControls");if(ac){ac.innerHTML=ADMIN_MODE?'<button id="addStarsBtn">🪙 +1000</button> <button id="unlockAllBtn">🔓 전부 해금</button>':'';if(ADMIN_MODE){document.getElementById("addStarsBtn").onclick=()=>{stars+=1000;updateShopUI();msg("관리자: 코인 +1000");};document.getElementById("unlockAllBtn").onclick=()=>{SKINS.forEach(x=>unlocked.add(x.id));updateShopUI();msg("관리자: 모든 캐릭터 해금!");};}}
+ const grid=document.getElementById("skinGrid");if(!grid)return;grid.innerHTML='';
+ SKINS.forEach(sk=>{const card=document.createElement('div');card.className='skinCard';const owned=unlocked.has(sk.id);card.innerHTML='<div class="skinName">'+sk.name+(equippedSkin===sk.id?' ✓':'')+'</div><div class="skinDesc">'+sk.desc+'</div>';
+ const b=document.createElement('button');b.textContent=equippedSkin===sk.id?'장착 중':owned?'장착':('🪙 '+sk.price+' 구매');b.disabled=equippedSkin===sk.id;
+ b.onclick=()=>{if(!owned){if(!ADMIN_MODE&&stars<sk.price){msg('🪙 코인이 부족해요!');return;}if(!ADMIN_MODE)stars-=sk.price;unlocked.add(sk.id);saveProgress();msg(sk.name+'을(를) 얻었어요!');}equippedSkin=sk.id;saveProgress();updateShopUI();};card.appendChild(b);grid.appendChild(card);});
+}
+function openShop(){if(!started){document.getElementById('start').style.display='none';document.getElementById('shop').style.display='block';updateShopUI();}}
+document.getElementById('shopBtn').onclick=openShop;
+document.getElementById('shopClose').onclick=()=>{document.getElementById('shop').style.display='none';document.getElementById('start').style.display='block';updateShopUI();};
+updateShopUI();
+// 계정 화면 이벤트 연결
+document.getElementById("loginTab").onclick=()=>setAuthMode("login");
+document.getElementById("signupTab").onclick=()=>setAuthMode("signup");
+document.getElementById("authSubmit").onclick=submitAuth;
+document.getElementById("authNick").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("authSubmit").click();});
+document.getElementById("authPass").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("authSubmit").click();});
+document.getElementById("authPass2").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("authSubmit").click();});
+document.getElementById("logoutBtn").onclick=(e)=>{e.stopPropagation();logout();};
+document.getElementById("startBtn").onclick=()=>{
+  started=true;
+  document.getElementById("start").style.display="none";
+  document.getElementById("shop").style.display="none";
+  if(savedReturn.valid){
+    player={x:savedReturn.x,y:savedReturn.y,z:savedReturn.z,vx:0,vy:0,vz:0,onGround:false};
+    yaw=savedReturn.yaw; pitch=savedReturn.pitch;
+    msg("게임 재개! 마지막으로 있었던 위치에서 시작합니다.");
+  }else{
+    restartAtLastCheckpoint();
+    msg(solved>0?"게임 시작! 마지막 체크포인트에서 시작합니다.":"게임 시작!");
+  }
+};
+addEventListener("contextmenu",e=>e.preventDefault());addEventListener("pointerdown",e=>{if(started&&e.button===2&&!shiftLock){mouseDown=true;lastX=e.clientX;lastY=e.clientY;}});addEventListener("pointerup",e=>{if(e.button===2&&!shiftLock)mouseDown=false;});addEventListener("pointermove",e=>{if((!mouseDown&&!shiftLock)||paused)return;yaw-=e.movementX*.004;pitch-=e.movementY*.004;pitch=Math.max(-1.15,Math.min(.65,pitch));});
+function setShiftLock(on){shiftLock=on;document.body.classList.toggle("shift-lock",on);mouseDown=on;const h=document.getElementById("shiftLockHint");if(h)h.textContent=on?"SHIFT LOCK · ON":"SHIFT LOCK · OFF";msg(on?"🔒 Shift Lock ON":"🔓 Shift Lock OFF");}
+function goLobby(){
+  started=false;
+  paused=false;
+  shiftLock=false;
+  mouseDown=false;
+  document.body.classList.remove("shift-lock");
+  hideQuestion();
+  keys={};
+  // 로비로 나가기 직전의 정확한 위치와 시점을 저장
+  savedReturn={x:player.x,y:player.y,z:player.z,yaw:yaw,pitch:pitch,valid:true};saveAccount();
+  currentCP=-1;
+  collected.clear();
+  document.getElementById("stars").textContent=stars;
+  document.getElementById("cp").textContent=solved;
+  document.getElementById("level").textContent=level;
+  document.getElementById("shop").style.display="none";
+  document.getElementById("start").style.display="block";
+  updateShopUI();
+}
+
+addEventListener('beforeunload',()=>{if(currentAccount){savedReturn={x:player.x,y:player.y,z:player.z,yaw:yaw,pitch:pitch,valid:true};if(navigator.sendBeacon)navigator.sendBeacon('/api/progress',new Blob([JSON.stringify(accountData())],{type:'application/json'}));}});
+addEventListener("keydown",e=>{if(e.code==="Escape"&&started){e.preventDefault();goLobby();return;}keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();if((e.code==="ShiftLeft"||e.code==="ShiftRight")&&!e.repeat&&started&&!paused){setShiftLock(!shiftLock);e.preventDefault();}if(e.code==="KeyR"&&started&&!paused)restartAtLastCheckpoint();});addEventListener("keyup",e=>{keys[e.code]=false;});
+function collidePlatforms(oldY){
+ player.onGround=false;
+ for(const p of platforms){
+  const top=p.y+p.sy;
+  const inside=Math.abs(player.x-p.x)<=p.sx+.48&&Math.abs(player.z-p.z)<=p.sz+.48;
+  // 이전 프레임과 현재 프레임 사이에 바닥을 통과했는지까지 검사해 고속 낙하/프레임 드랍 때 뚫림 방지
+  if(inside&&oldY>=top+0.72&&player.y<=top+1.08&&player.vy<=0){
+   player.y=top+1;
+   player.vy=0;
+   player.onGround=true;
+  }
+ }
+}
+function getObstacle(o,t){const ds=1+Math.min(level-1,8)*.14,q={...o};if(o.move==="x")q.x=o.x+Math.sin(t*o.speed*ds)*o.amp;if(o.move==="rot")q.rot=(o.rot||0)+t*o.speed*ds;return q;}
+function cSafeX(c){return 3.2;}
+function obstacleHit(o,t){const q=getObstacle(o,t),phx=.32,phz=.28,pb=player.y-1,pt=player.y+.95,ob=q.y-q.sy,ot=q.y+q.sy;for(const c of cps){if(Math.abs(q.z-c.z)<2.8&&Math.abs(q.x-c.x)<cSafeX(c))return false;}return Math.abs(player.x-q.x)<=q.sx+phx&&Math.abs(player.z-q.z)<=q.sz+phz&&pt>=ob&&pb<=ot;}
+function respawn(t){const c=solved?cps[solved-1]:null;player.x=c?c.x:0;player.z=c?c.z+3:2;player.y=1;player.vy=0;msg(t);}
+function update(dt,t){if(!started||paused)return;let f=0,r=0;if(keys.KeyW)f++;if(keys.KeyS)f--;if(keys.KeyD)r++;if(keys.KeyA)r--;const len=Math.hypot(f,r)||1;f/=len;r/=len;const speed=7+Math.min(level-1,8)*.18,sy=Math.sin(yaw),cy=Math.cos(yaw);player.vx=(sy*f+cy*r)*speed;player.vz=(-cy*f+sy*r)*speed;if(keys.Space&&player.onGround){player.vy=Math.max(7.2,9-(level-1)*.12);player.onGround=false;}const oldY=player.y;player.vy-=(22+Math.min(level-1,8)*.7)*dt;player.x+=player.vx*dt;player.y+=player.vy*dt;player.z+=player.vz*dt;collidePlatforms(oldY);
+ // 체크포인트는 장애물 판정보다 먼저 확인해 지나가면서 놓치는 경우를 방지
+ if(solved<cps.length){
+  const c=cps[solved];
+  if(Math.hypot(player.x-c.x,player.z-c.z)<2.75){showQuestion(solved);return;}
+ }
+ for(const o of obstacles)if(obstacleHit(o,t)){respawn("장애물에 부딪혔어요!");return;}
+ // 보너스 스타: 길 주변에 떠 있는 작은 오브젝트를 먹으면 점수 증가
+ for(let i=0;i<24;i++){const z=-8-i*6.1,x=Math.sin(i*2.4)*3.6;if(!collected.has(i)&&Math.hypot(player.x-x,player.z-z)<1.15&&Math.abs(player.y-(1.8+Math.sin(i)*.3))<1.5){collected.add(i);stars+=3;saveProgress();document.getElementById("stars").textContent=stars;updateShopUI();msg("🪙 보너스 코인!");}}
+ if(player.y<-7){respawn("떨어졌어요!");return;}if(Math.abs(player.x)>13){respawn("맵 밖으로 나갔어요!");return;}
+ // 최종문에 닿으면 즉시 다음 스테이지 시작 위치로 순간이동
+ if(solved>=cps.length && Math.abs(player.z-(-145))<2.2 && Math.abs(player.x)<3.15 && player.y<7){
+   paused=true; level++; saveAccount();
+   document.getElementById("level").textContent=level;
+   msg("🚪 최종문 통과! 다음 스테이지로 순간이동!");
+   player={x:0,y:1,z:2,vx:0,vy:0,vz:0,onGround:false};
+   yaw=0; pitch=-.08; solved=0; currentCP=-1; collected.clear();
+   document.getElementById("cp").textContent=0; saveAccount();
+   setTimeout(()=>{paused=false;},500);
+   return;
+ }
+ // 기존 코스 끝 안전장치 유지
+ if(solved>=cps.length&&player.z<-155){paused=true;level++;saveAccount();document.getElementById("level").textContent=level;msg("🎉 코스 클리어! 다음 난이도 "+level);setTimeout(()=>{player={x:0,y:1,z:2,vx:0,vy:0,vz:0,onGround:false};yaw=0;pitch=-.08;solved=0;currentCP=-1;paused=false;document.getElementById("cp").textContent=0;},1400);}}
+function render(t){resize();const sec=t/1000;gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);pv=matMul(perspective(Math.PI/3,canvas.width/canvas.height,.1,220),viewMatrix());
+ // 플랫폼
+ for(const p of platforms)draw(p);
+ // 장애물
+ for(const o of obstacles)draw(getObstacle(o,sec));
+ // 체크포인트 게이트
+ for(let i=0;i<cps.length;i++){const c=cps[i],col=i<solved?[.2,1,.45]:[.2,.75,1];draw({x:c.x-1.7,y:1.3,z:c.z,sx:.12,sy:1.3,sz:.12,color:col});draw({x:c.x+1.7,y:1.3,z:c.z,sx:.12,sy:1.3,sz:.12,color:col});draw({x:c.x,y:2.6,z:c.z,sx:1.82,sy:.1,sz:.1,color:col});}
+ // 보너스 코인
+ for(let i=0;i<24;i++){if(collected.has(i))continue;const z=-8-i*6.1,x=Math.sin(i*2.4)*3.6,y=1.8+Math.sin(i)*.3;const ry=sec*2.2+i*.35;
+  drawCoin({x,y,z,sx:.46,sy:.46,sz:.13,ry,color:[1.0,.68,.03]});
+  drawCoin({x,y,z:z-.075,sx:.37,sy:.37,sz:.035,ry,color:[1.0,.86,.10]});
+  drawE({x,y,z:z-.11,sx:.055,sy:.24,sz:.025,ry,color:[.72,.40,.02]});
+}
+ // 장식용 나무/기둥: 각 구역마다 다른 느낌
+ for(let i=0;i<32;i++){const z=-5-i*4.8,side=i%2===0?-1:1,x=side*(7.6+(i%3)*.65);if(i%2===0){draw({x,y:1.0,z,sx:.28,sy:1.2,sz:.28,color:[.25,.15,.09]});draw({x,y:2.4,z,sx:.95,sy:.9,sz:.95,color:[.10,.45,.25]});}else{draw({x,y:1.3,z,sx:.18,sy:1.5,sz:.18,color:[.18,.25,.42]});draw({x,y:3.0,z,sx:.55,sy:.55,sz:.55,color:[.25,.55,.9]});}}
+ // 플레이어
+ drawPlayer(sec);drawRemotePlayers();drawFinalGate();
+requestAnimationFrame(render);}
+let pv=new Float32Array(16);
+// FINAL GATE
+function drawFinalGate(){
+ const gz=-145,gx=0,gy=3.2;
+ drawE({x:gx-2.65,y:gy,z:gz,sx:.55,sy:3.8,sz:.65,ry:0,color:[.12,.16,.22]});
+ drawE({x:gx+2.65,y:gy,z:gz,sx:.55,sy:3.8,sz:.65,ry:0,color:[.12,.16,.22]});
+ drawE({x:gx,y:gy+3.35,z:gz,sx:3.25,sy:.55,sz:.72,ry:0,color:[.12,.16,.22]});
+ drawE({x:gx,y:gy+3.05,z:gz-.04,sx:2.75,sy:.18,sz:.78,ry:0,color:[1,.72,.08]});
+ drawE({x:gx-1.15,y:gy,z:gz+.02,sx:1.05,sy:2.65,sz:.28,ry:0,color:[.20,.25,.34]});
+ drawE({x:gx+1.15,y:gy,z:gz+.02,sx:1.05,sy:2.65,sz:.28,ry:0,color:[.20,.25,.34]});
+ drawE({x:gx,y:gy,z:gz-.20,sx:.12,sy:2.05,sz:.10,ry:0,color:[1,.84,.20]});
+ drawE({x:gx,y:gy+3.85,z:gz,sx:.32,sy:.42,sz:.32,ry:0,color:[1,.72,.08]});
+}
+
+// Real-time multiplayer presence and player synchronization.
+let gameSocket=null,remotePlayers={};
+function onlineToast(s){const e=document.getElementById('toastOnline');if(!e)return;e.textContent=s;e.style.display='block';clearTimeout(onlineToast.timer);onlineToast.timer=setTimeout(()=>e.style.display='none',2200)}
+function connectGameSocket(){if(!window.io||!currentAccount)return;if(gameSocket)gameSocket.disconnect();gameSocket=io();gameSocket.on('connect',()=>{document.getElementById('onlineStatus').textContent='● 온라인 서버 연결됨';gameSocket.emit('join',{nick:currentAccount});});gameSocket.on('disconnect',()=>{document.getElementById('onlineStatus').textContent='○ 서버 연결 끊김 · 재연결 중';});gameSocket.on('players',p=>{remotePlayers=p||{};document.getElementById('players').textContent='접속자 '+(Object.keys(remotePlayers).length+1)+'명';});gameSocket.on('notice',s=>onlineToast(s));}
+let netLast=0;function sendNetworkState(now){if(!gameSocket||!gameSocket.connected||!currentAccount||!started||paused||now-netLast<70)return;netLast=now;gameSocket.emit('state',{x:player.x,y:player.y,z:player.z,yaw,skin:equippedSkin,level});}
+function drawRemotePlayers(){for(const [id,p] of Object.entries(remotePlayers)){if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.z))continue;const sk=SKINS.find(x=>x.id===p.skin)||SKINS[0],x=p.x,y=p.y||1,z=p.z;drawE({x,y:y+1.05,z,sx:.45,sy:.6,sz:.3,ry:p.yaw||0,color:sk.body});drawE({x,y:y+2,z,sx:.34,sy:.36,sz:.32,ry:p.yaw||0,color:sk.skin});drawE({x,y:y+2.32,z,sx:.35,sy:.12,sz:.33,ry:p.yaw||0,color:sk.hair});}}
+function loop(t){const dt=Math.min(.033,(t-lastTime)/1000);lastTime=t;update(dt,t/1000);sendNetworkState(t);requestAnimationFrame(loop);}reset();requestAnimationFrame(render);requestAnimationFrame(loop);
+</script></body></html>
